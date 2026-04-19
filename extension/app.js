@@ -1165,10 +1165,16 @@ async function renderStaticDashboard() {
     let closeDupesBtn = '';
     if (hasGlobalDupes) {
       const allDupeUrlsEncoded = Array.from(globalDupeUrlsSet).map(u => encodeURIComponent(u)).join(',');
-      closeDupesBtn = ` <button class="action-btn" data-action="dedup-keep-one" data-dupe-urls="${allDupeUrlsEncoded}" style="font-size:11px;padding:3px 10px;margin-left:8px;">Close duplicated tabs</button>`;
+      closeDupesBtn = `<button class="action-btn" data-action="dedup-keep-one-global" data-dupe-urls="${allDupeUrlsEncoded}" style="font-size:11px;padding:3px 10px;">${ICONS.close} Close duplicated tabs</button>`;
     }
 
-    openTabsSectionCount.innerHTML = `${domainGroups.length} domain${domainGroups.length !== 1 ? 's' : ''} &nbsp;&middot;&nbsp; <button class="action-btn close-tabs" data-action="close-all-open-tabs" style="font-size:11px;padding:3px 10px;">${ICONS.close} Close all ${realTabs.length} tabs</button>${closeDupesBtn}`;
+    openTabsSectionCount.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>${domainGroups.length} domain${domainGroups.length !== 1 ? 's' : ''} &nbsp;&middot;&nbsp;</span>
+        <button class="action-btn close-tabs" data-action="close-all-open-tabs" style="font-size:11px;padding:3px 10px;">${ICONS.close} Close all ${realTabs.length} tabs</button>
+        ${closeDupesBtn}
+      </div>
+    `;
     openTabsMissionsEl.innerHTML = domainGroups.map(g => renderDomainCard(g)).join('');
     openTabsSection.style.display = 'block';
   } else if (openTabsSection) {
@@ -1447,6 +1453,20 @@ document.addEventListener('click', async (e) => {
     }
 
     showToast('Closed duplicates, kept one copy each');
+    return;
+  }
+
+  // ---- Close ALL duplicates globally ----
+  if (action === 'dedup-keep-one-global') {
+    const urlsEncoded = actionEl.dataset.dupeUrls || '';
+    const urls = urlsEncoded.split(',').map(u => decodeURIComponent(u)).filter(Boolean);
+    if (urls.length === 0) return;
+
+    await closeDuplicateTabs(urls, true);
+    playCloseSound();
+    showToast('Closed all duplicated tabs');
+    
+    await renderDashboard(); // completely refresh the view
     return;
   }
 
