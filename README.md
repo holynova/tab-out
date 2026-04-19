@@ -1,4 +1,13 @@
-# Tab Out
+# Tab Out (Modified by holynova)
+
+> **声明 / Disclaimer:** 
+> 这个项目是对由 [Zara](https://x.com/zarazhangrui) 创建的 [zarazhangrui/tab-out](https://github.com/zarazhangrui/tab-out) 的一份修改版。感谢原作者极其出色的设计与实现！
+> 
+> 在原版的基础上，当前版本主要增加了以下功能增强：
+> 1. **视图自动刷新**：每次重新激活该扩展的标签页时，自动获取最新的 Tabs 状态并刷新界面内容。
+> 2. **全局重复标签一键清理**：在顶部按钮区域附近增加 “Close duplicated tabs” 按钮，实现一键快速清理全局的重复页面。
+> 3. **支持多窗口管理**：如果系统检测到开启了多个含 Web tabs 的 Chrome 窗口，会自动在顶部显示窗口状态面板，并支持 “Merge all windows”（合并所有的 Tabs 到当前窗口）与 “Close other windows”（关闭除当前以外的其它的 Chrome 窗口）操作。
+> 4. **实时筛选和搜索**：页面右上角新增搜索框输入组件。每当打开该扩展页面时将自动获取焦点，实时匹配 Tabs 的标题和网址并高亮显示，同时自动折叠过滤不相关的标签内容。
 
 **Keep tabs on your tabs.**
 
