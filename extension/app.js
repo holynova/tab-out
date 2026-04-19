@@ -1150,7 +1150,25 @@ async function renderStaticDashboard() {
 
   if (domainGroups.length > 0 && openTabsSection) {
     if (openTabsSectionTitle) openTabsSectionTitle.textContent = 'Open tabs';
-    openTabsSectionCount.innerHTML = `${domainGroups.length} domain${domainGroups.length !== 1 ? 's' : ''} &nbsp;&middot;&nbsp; <button class="action-btn close-tabs" data-action="close-all-open-tabs" style="font-size:11px;padding:3px 10px;">${ICONS.close} Close all ${realTabs.length} tabs</button>`;
+    
+    // Check for any duplicate tabs across all groups
+    const urlSet = new Set();
+    const globalDupeUrlsSet = new Set();
+    for (const g of domainGroups) {
+      for (const t of g.tabs) {
+        if (urlSet.has(t.url)) globalDupeUrlsSet.add(t.url);
+        else urlSet.add(t.url);
+      }
+    }
+    const hasGlobalDupes = globalDupeUrlsSet.size > 0;
+    
+    let closeDupesBtn = '';
+    if (hasGlobalDupes) {
+      const allDupeUrlsEncoded = Array.from(globalDupeUrlsSet).map(u => encodeURIComponent(u)).join(',');
+      closeDupesBtn = ` <button class="action-btn" data-action="dedup-keep-one" data-dupe-urls="${allDupeUrlsEncoded}" style="font-size:11px;padding:3px 10px;margin-left:8px;">Close duplicated tabs</button>`;
+    }
+
+    openTabsSectionCount.innerHTML = `${domainGroups.length} domain${domainGroups.length !== 1 ? 's' : ''} &nbsp;&middot;&nbsp; <button class="action-btn close-tabs" data-action="close-all-open-tabs" style="font-size:11px;padding:3px 10px;">${ICONS.close} Close all ${realTabs.length} tabs</button>${closeDupesBtn}`;
     openTabsMissionsEl.innerHTML = domainGroups.map(g => renderDomainCard(g)).join('');
     openTabsSection.style.display = 'block';
   } else if (openTabsSection) {
@@ -1160,6 +1178,26 @@ async function renderStaticDashboard() {
   // --- Footer stats ---
   const statTabs = document.getElementById('statTabs');
   if (statTabs) statTabs.textContent = openTabs.length;
+
+  // --- Window Management ---
+  const windowMgmtContainer = document.getElementById('windowManagementContainer');
+  windowMgmtContainer.innerHTML = '';
+  // Count unique windows that have at least one real tab
+  const uniqueWindows = new Set(realTabs.map(t => t.windowId));
+  if (uniqueWindows.size > 1 && windowMgmtContainer) {
+    const windowActionsHtml = `
+      <div class="window-management-banner" style="margin-bottom: 20px; background: rgba(90, 107, 122, 0.05); border: 1px solid rgba(90, 107, 122, 0.2); padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="font-size: 13px; color: var(--ink);">
+          <strong style="font-weight: 600;">${uniqueWindows.size} windows</strong> detected.
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="action-btn" data-action="merge-windows" style="font-size: 12px; padding: 6px 14px;">Merge all windows</button>
+          <button class="action-btn close-tabs" data-action="close-other-windows" style="font-size: 12px; padding: 6px 14px;">Close other windows</button>
+        </div>
+      </div>
+    `;
+    windowMgmtContainer.innerHTML = windowActionsHtml;
+  }
 
   // --- Check for duplicate Tab Out tabs ---
   checkTabOutDupes();
@@ -1431,6 +1469,32 @@ document.addEventListener('click', async (e) => {
     showToast('All tabs closed. Fresh start.');
     return;
   }
+  
+  // ---- Merge all windows into the current one ----
+  if (action === 'merge-windows') {
+    const currentWindow = await chrome.windows.getCurrent();
+    const otherTabs = openTabs.filter(t => t.windowId !== currentWindow.id);
+    if (otherTabs.length > 0) {
+      await chrome.tabs.move(otherTabs.map(t => t.id), { windowId: currentWindow.id, index: -1 });
+      showToast(`Merged ${otherTabs.length} tabs into this window`);
+      await renderDashboard();
+    }
+    return;
+  }
+
+  // ---- Close other windows ----
+  if (action === 'close-other-windows') {
+    const currentWindow = await chrome.windows.getCurrent();
+    const otherWindowIds = Array.from(new Set(openTabs.filter(t => t.windowId !== currentWindow.id).map(t => t.windowId)));
+    if (otherWindowIds.length > 0) {
+      for (const wId of otherWindowIds) {
+        await chrome.windows.remove(wId);
+      }
+      showToast('Closed other windows');
+      await renderDashboard();
+    }
+    return;
+  }
 });
 
 // ---- Archive toggle — expand/collapse the archive section ----
@@ -1475,8 +1539,71 @@ document.addEventListener('input', async (e) => {
   }
 });
 
+// ---- Tab search — filter open tabs in real-time ----
+document.addEventListener('input', (e) => {
+  if (e.target.id !== 'tabSearchInput') return;
+  
+  const q = e.target.value.trim().toLowerCase();
+  
+  const missionCards = document.querySelectorAll('.mission-card');
+  missionCards.forEach(card => {
+    let cardHasMatch = false;
+    const chips = card.querySelectorAll('.page-chip');
+    chips.forEach(chip => {
+      // "+N more" overflow chip is handled implicitly by its children or text
+      if (chip.classList.contains('page-chip-overflow')) return;
+      
+      const title = chip.getAttribute('title') || '';
+      const url = chip.dataset.tabUrl || '';
+      const text = chip.textContent || '';
+      
+      if (q === '' || title.toLowerCase().includes(q) || url.toLowerCase().includes(q) || text.toLowerCase().includes(q)) {
+        chip.style.display = 'flex';
+        // highlight matches
+        if (q !== '' && !chip.dataset.originalHtml) {
+          chip.dataset.originalHtml = chip.innerHTML;
+        }
+        if (q !== '') {
+          // Remove previous highlights
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = chip.dataset.originalHtml;
+          const textSpan = tempDiv.querySelector('.chip-text');
+          if (textSpan) {
+            const regex = new RegExp(`(${q.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+            textSpan.innerHTML = textSpan.textContent.replace(regex, '<mark style="background: rgba(200, 113, 58, 0.3); color: inherit; border-radius: 2px;">$1</mark>');
+            chip.innerHTML = tempDiv.innerHTML;
+          }
+        } else if (chip.dataset.originalHtml) {
+          chip.innerHTML = chip.dataset.originalHtml;
+          delete chip.dataset.originalHtml;
+        }
+        cardHasMatch = true;
+      } else {
+        chip.style.display = 'none';
+      }
+    });
+
+    if (q === '') {
+      card.style.display = 'flex';
+      const overflowToggle = card.querySelector('.page-chip-overflow');
+      if (overflowToggle) overflowToggle.style.display = 'flex';
+    } else {
+      card.style.display = cardHasMatch ? 'flex' : 'none';
+      const overflowToggle = card.querySelector('.page-chip-overflow');
+      if (overflowToggle) overflowToggle.style.display = 'none'; // Always hide +N more when searching so hidden tabs can appear
+      const overflowContainer = card.querySelector('.page-chips-overflow');
+      if (overflowContainer) overflowContainer.style.display = 'contents';
+    }
+  });
+});
 
 /* ----------------------------------------------------------------
-   INITIALIZE
+   INITIALIZE & REFRESH ON FOCUS
    ---------------------------------------------------------------- */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    renderDashboard();
+  }
+});
+
 renderDashboard();

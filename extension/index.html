@@ -26,6 +26,9 @@
       <!-- "Friday, April 4, 2026" — written by getDateDisplay() in app.js -->
       <div class="date" id="dateDisplay"></div>
     </div>
+    <div class="header-right" style="display: flex; align-items: center; align-self: center;">
+      <input type="text" id="tabSearchInput" placeholder="Search tabs..." class="tab-search-input" autocomplete="off" />
+    </div>
   </header>
 
   <!-- ================================================================
@@ -61,6 +64,7 @@
         <div class="section-line"></div>
         <div class="section-count" id="openTabsSectionCount"></div>
       </div>
+      <div id="windowManagementContainer"></div>
       <div class="missions" id="openTabsMissions"></div>
     </div>
 

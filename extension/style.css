@@ -1156,3 +1156,21 @@ footer { animation: fadeUp 0.5s ease 0.65s both; }
   opacity: 0.6;
   flex-shrink: 0;
 }
+
+.tab-search-input {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 16px;
+  border: 1px solid var(--warm-gray);
+  border-radius: 20px;
+  background: var(--card-bg);
+  color: var(--ink);
+  outline: none;
+  transition: all 0.2s;
+  width: 250px;
+}
+.tab-search-input:focus {
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 0 3px rgba(200, 113, 58, 0.1);
+}
+
