@@ -26,7 +26,9 @@
       <!-- "Friday, April 4, 2026" — written by getDateDisplay() in app.js -->
       <div class="date" id="dateDisplay"></div>
     </div>
-    <div class="header-right" style="display: flex; align-items: center; align-self: center;">
+    <div class="header-right" style="display: flex; align-items: center; align-self: center; gap: 8px;">
+      <button id="themeToggle" class="icon-toggle-btn" title="Toggle dark mode">🌙</button>
+      <button id="langToggle" class="icon-toggle-btn" title="中/EN">中/EN</button>
       <input type="text" id="tabSearchInput" placeholder="Search tabs..." class="tab-search-input" autocomplete="off" autofocus />
     </div>
   </header>
@@ -132,6 +134,9 @@
 <!-- Personal config (gitignored) — defines LOCAL_LANDING_PAGE_PATTERNS etc. -->
 <!-- If the file doesn't exist, that's fine — app.js uses sensible defaults. -->
 <script src="config.local.js" onerror="/* no personal config, that's fine */"></script>
+
+<!-- i18n & Theme logic -->
+<script src="i18n.js"></script>
 
 <!-- Main dashboard logic — loads last so the DOM is ready -->
 <script src="app.js"></script>

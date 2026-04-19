@@ -1174,3 +1174,40 @@ footer { animation: fadeUp 0.5s ease 0.65s both; }
   box-shadow: 0 0 0 3px rgba(200, 113, 58, 0.1);
 }
 
+html[data-theme="dark"] {
+  --ink: #e8e2da;
+  --paper: #12100d;
+  --warm-gray: #302a24;
+  --muted: #8b8076;
+  --card-bg: #1c1815;
+  --shadow: rgba(0, 0, 0, 0.4);
+}
+
+.icon-toggle-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--muted);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+.icon-toggle-btn:hover {
+  background: var(--warm-gray);
+  color: var(--ink);
+}
+.icon-toggle-btn[title="中/EN"] {
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  width: auto;
+  border-radius: 12px;
+  padding: 4px 10px;
+}
+

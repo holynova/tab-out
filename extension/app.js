@@ -461,8 +461,8 @@ function checkAndShowEmptyState() {
           <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
         </svg>
       </div>
-      <div class="empty-title">Inbox zero, but for tabs.</div>
-      <div class="empty-subtitle">You're free.</div>
+      <div class="empty-title">${t('inboxZeroTitle')}</div>
+      <div class="empty-subtitle">${t('inboxZeroDesc')}</div>
     </div>
   `;
 
@@ -484,11 +484,11 @@ function timeAgo(dateStr) {
   const diffHours = Math.floor((now - then) / 3600000);
   const diffDays  = Math.floor((now - then) / 86400000);
 
-  if (diffMins < 1)   return 'just now';
-  if (diffMins < 60)  return diffMins + ' min ago';
-  if (diffHours < 24) return diffHours + ' hr' + (diffHours !== 1 ? 's' : '') + ' ago';
-  if (diffDays === 1) return 'yesterday';
-  return diffDays + ' days ago';
+  if (diffMins < 1)   return t('justNow');
+  if (diffMins < 60)  return t('minAgo', diffMins);
+  if (diffHours < 24) return t('hrAgo', diffHours, diffHours !== 1 ? 's' : '');
+  if (diffDays === 1) return t('yesterday');
+  return t('daysAgo', diffDays);
 }
 
 /**
@@ -496,9 +496,9 @@ function timeAgo(dateStr) {
  */
 function getGreeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return t('greetingMorning');
+  if (hour < 17) return t('greetingAfternoon');
+  return t('greetingEvening');
 }
 
 /**
@@ -772,7 +772,7 @@ function buildOverflowChips(hiddenTabs, urlCounts = {}) {
       ${faviconUrl ? `<img class="chip-favicon" src="${faviconUrl}" alt="" onerror="this.style.display='none'">` : ''}
       <span class="chip-text">${label}</span>${dupeTag}
       <div class="chip-actions">
-        <button class="chip-action chip-save" data-action="defer-single-tab" data-tab-url="${safeUrl}" data-tab-title="${safeTitle}" title="Save for later">
+        <button class="chip-action chip-save" data-action="defer-single-tab" data-tab-url="${safeUrl}" data-tab-title="${safeTitle}" title="${t('saveForLaterAction')}">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
         </button>
         <button class="chip-action chip-close" data-action="close-single-tab" data-tab-url="${safeUrl}" title="Close this tab">
@@ -815,12 +815,12 @@ function renderDomainCard(group) {
 
   const tabBadge = `<span class="open-tabs-badge">
     ${ICONS.tabs}
-    ${tabCount} tab${tabCount !== 1 ? 's' : ''} open
+    ${t('domainsMsg', tabCount, tabCount !== 1 ? 's' : '')}
   </span>`;
 
   const dupeBadge = hasDupes
     ? `<span class="open-tabs-badge" style="color:var(--accent-amber);background:rgba(200,113,58,0.08);">
-        ${totalExtras} duplicate${totalExtras !== 1 ? 's' : ''}
+        ${t('closeDomainDupesBtn', totalExtras, totalExtras !== 1 ? 's' : '').replace('Close ', '')}
       </span>`
     : '';
 
@@ -853,7 +853,7 @@ function renderDomainCard(group) {
       ${faviconUrl ? `<img class="chip-favicon" src="${faviconUrl}" alt="" onerror="this.style.display='none'">` : ''}
       <span class="chip-text">${label}</span>${dupeTag}
       <div class="chip-actions">
-        <button class="chip-action chip-save" data-action="defer-single-tab" data-tab-url="${safeUrl}" data-tab-title="${safeTitle}" title="Save for later">
+        <button class="chip-action chip-save" data-action="defer-single-tab" data-tab-url="${safeUrl}" data-tab-title="${safeTitle}" title="${t('saveForLaterAction')}">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
         </button>
         <button class="chip-action chip-close" data-action="close-single-tab" data-tab-url="${safeUrl}" title="Close this tab">
@@ -866,14 +866,14 @@ function renderDomainCard(group) {
   let actionsHtml = `
     <button class="action-btn close-tabs" data-action="close-domain-tabs" data-domain-id="${stableId}">
       ${ICONS.close}
-      Close all ${tabCount} tab${tabCount !== 1 ? 's' : ''}
+      ${t('closeAllDomainTabsBtn', tabCount, tabCount !== 1 ? 's' : '')}
     </button>`;
 
   if (hasDupes) {
     const dupeUrlsEncoded = dupeUrls.map(([url]) => encodeURIComponent(url)).join(',');
     actionsHtml += `
       <button class="action-btn" data-action="dedup-keep-one" data-dupe-urls="${dupeUrlsEncoded}">
-        Close ${totalExtras} duplicate${totalExtras !== 1 ? 's' : ''}
+        ${t('closeDomainDupesBtn', totalExtras, totalExtras !== 1 ? 's' : '')}
       </button>`;
   }
 
@@ -882,7 +882,7 @@ function renderDomainCard(group) {
       <div class="status-bar"></div>
       <div class="mission-content">
         <div class="mission-top">
-          <span class="mission-name">${isLanding ? 'Homepages' : (group.label || friendlyDomain(group.domain))}</span>
+          <span class="mission-name">${isLanding ? t('homepages') : (group.label || friendlyDomain(group.domain))}</span>
           ${tabBadge}
           ${dupeBadge}
         </div>
@@ -891,7 +891,7 @@ function renderDomainCard(group) {
       </div>
       <div class="mission-meta">
         <div class="mission-page-count">${tabCount}</div>
-        <div class="mission-page-label">tabs</div>
+        <div class="mission-page-label">${t('domainsMsg', '', '').replace(/个域名|domain/g, '').trim() || 'tabs'}</div>
       </div>
     </div>`;
 }
@@ -981,7 +981,7 @@ function renderDeferredItem(item) {
           <span>${ago}</span>
         </div>
       </div>
-      <button class="deferred-dismiss" data-action="dismiss-deferred" data-deferred-id="${item.id}" title="Dismiss">
+      <button class="deferred-dismiss" data-action="dismiss-deferred" data-deferred-id="${item.id}" title="${t('dismissAction')}">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
       </button>
     </div>`;
@@ -1165,13 +1165,13 @@ async function renderStaticDashboard() {
     let closeDupesBtn = '';
     if (hasGlobalDupes) {
       const allDupeUrlsEncoded = Array.from(globalDupeUrlsSet).map(u => encodeURIComponent(u)).join(',');
-      closeDupesBtn = `<button class="action-btn" data-action="dedup-keep-one-global" data-dupe-urls="${allDupeUrlsEncoded}" style="font-size:11px;padding:3px 10px;">${ICONS.close} Close duplicated tabs</button>`;
+      closeDupesBtn = `<button class="action-btn" data-action="dedup-keep-one-global" data-dupe-urls="${allDupeUrlsEncoded}" style="font-size:11px;padding:3px 10px;">${ICONS.close} ${t('closeDupesBtn')}</button>`;
     }
 
     openTabsSectionCount.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span>${domainGroups.length} domain${domainGroups.length !== 1 ? 's' : ''} &nbsp;&middot;&nbsp;</span>
-        <button class="action-btn close-tabs" data-action="close-all-open-tabs" style="font-size:11px;padding:3px 10px;">${ICONS.close} Close all ${realTabs.length} tabs</button>
+        <span>${t('domainsMsg', domainGroups.length, domainGroups.length !== 1 ? 's' : '')} &nbsp;&middot;&nbsp;</span>
+        <button class="action-btn close-tabs" data-action="close-all-open-tabs" style="font-size:11px;padding:3px 10px;">${ICONS.close} ${t('closeAllTabsBtn', realTabs.length)}</button>
         ${closeDupesBtn}
       </div>
     `;
@@ -1194,11 +1194,11 @@ async function renderStaticDashboard() {
     const windowActionsHtml = `
       <div class="window-management-banner" style="margin-bottom: 20px; background: rgba(90, 107, 122, 0.05); border: 1px solid rgba(90, 107, 122, 0.2); padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
         <div style="font-size: 13px; color: var(--ink);">
-          <strong style="font-weight: 600;">${uniqueWindows.size} windows</strong> detected.
+          <strong style="font-weight: 600;">${t('windowsDetectedMsg', uniqueWindows.size)}</strong>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button class="action-btn" data-action="merge-windows" style="font-size: 12px; padding: 6px 14px;">Merge all windows</button>
-          <button class="action-btn close-tabs" data-action="close-other-windows" style="font-size: 12px; padding: 6px 14px;">Close other windows</button>
+          <button class="action-btn" data-action="merge-windows" style="font-size: 12px; padding: 6px 14px;">${t('mergeWindowsBtn')}</button>
+          <button class="action-btn close-tabs" data-action="close-other-windows" style="font-size: 12px; padding: 6px 14px;">${t('closeOtherWindowsBtn')}</button>
         </div>
       </div>
     `;
@@ -1242,7 +1242,7 @@ document.addEventListener('click', async (e) => {
       banner.style.opacity = '0';
       setTimeout(() => { banner.style.display = 'none'; banner.style.opacity = '1'; }, 400);
     }
-    showToast('Closed extra Tab Out tabs');
+    showToast(t('closedExtraTabOutsToast'));
     return;
   }
 
@@ -1304,7 +1304,7 @@ document.addEventListener('click', async (e) => {
     const statTabs = document.getElementById('statTabs');
     if (statTabs) statTabs.textContent = openTabs.length;
 
-    showToast('Tab closed');
+    showToast(t('tabClosedToast'));
     return;
   }
 
@@ -1339,7 +1339,7 @@ document.addEventListener('click', async (e) => {
       setTimeout(() => chip.remove(), 200);
     }
 
-    showToast('Saved for later');
+    showToast(t('savedForLaterToast'));
     await renderDeferredColumn();
     return;
   }
@@ -1412,8 +1412,8 @@ document.addEventListener('click', async (e) => {
     const idx = domainGroups.indexOf(group);
     if (idx !== -1) domainGroups.splice(idx, 1);
 
-    const groupLabel = group.domain === '__landing-pages__' ? 'Homepages' : (group.label || friendlyDomain(group.domain));
-    showToast(`Closed ${urls.length} tab${urls.length !== 1 ? 's' : ''} from ${groupLabel}`);
+    const groupLabel = group.domain === '__landing-pages__' ? t('homepages') : (group.label || friendlyDomain(group.domain));
+    showToast(t('closedDomainTabsToast', urls.length, urls.length !== 1 ? 's' : '', groupLabel));
 
     const statTabs = document.getElementById('statTabs');
     if (statTabs) statTabs.textContent = openTabs.length;
@@ -1452,7 +1452,7 @@ document.addEventListener('click', async (e) => {
       card.classList.add('has-neutral-bar');
     }
 
-    showToast('Closed duplicates, kept one copy each');
+    showToast(t('closedDupsKeepOneToast'));
     return;
   }
 
@@ -1464,7 +1464,7 @@ document.addEventListener('click', async (e) => {
 
     await closeDuplicateTabs(urls, true);
     playCloseSound();
-    showToast('Closed all duplicated tabs');
+    showToast(t('closedAllDupesToast'));
     
     await renderDashboard(); // completely refresh the view
     return;
@@ -1486,7 +1486,7 @@ document.addEventListener('click', async (e) => {
       animateCardOut(c);
     });
 
-    showToast('All tabs closed. Fresh start.');
+    showToast(t('closedAllTabsFreshToast'));
     return;
   }
   
@@ -1496,7 +1496,7 @@ document.addEventListener('click', async (e) => {
     const otherTabs = openTabs.filter(t => t.windowId !== currentWindow.id);
     if (otherTabs.length > 0) {
       await chrome.tabs.move(otherTabs.map(t => t.id), { windowId: currentWindow.id, index: -1 });
-      showToast(`Merged ${otherTabs.length} tabs into this window`);
+      showToast(t('mergedWindowsToast', otherTabs.length));
       await renderDashboard();
     }
     return;
@@ -1510,7 +1510,7 @@ document.addEventListener('click', async (e) => {
       for (const wId of otherWindowIds) {
         await chrome.windows.remove(wId);
       }
-      showToast('Closed other windows');
+      showToast(t('closedOtherWindowsToast'));
       await renderDashboard();
     }
     return;
