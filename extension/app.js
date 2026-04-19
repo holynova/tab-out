@@ -1622,8 +1622,14 @@ document.addEventListener('input', (e) => {
    ---------------------------------------------------------------- */
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
-    renderDashboard();
+    renderDashboard().then(() => {
+      const searchInput = document.getElementById('tabSearchInput');
+      if (searchInput) searchInput.focus();
+    });
   }
 });
 
-renderDashboard();
+renderDashboard().then(() => {
+  const searchInput = document.getElementById('tabSearchInput');
+  if (searchInput) searchInput.focus();
+});
